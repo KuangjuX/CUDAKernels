@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "MLTable": "yaml",
-        "valarray": "cpp"
-    }
-}
