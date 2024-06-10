@@ -1,4 +1,4 @@
-#include "kernels/warp_reduce.hpp"
+#include "kernels/mod.hpp"
 #include "warp/mod.hpp"
 
 namespace cudakernels::kernels {
@@ -81,4 +81,33 @@ __global__ void reduce_max_kernel(const Element* input, Element* output,
     // 对所有 blocks 进行 reduce max 得到结果
     if (tid == 0) atomicMax(output, max);
 }
+
+void reduce_sum(const torch::Tensor& input, torch::Tensor& output,
+                int64_t size) {
+    int thread_size = 1024;
+    int block_size = (size + thread_size - 1) / thread_size;
+
+    if (input.dtype() == torch::kFloat32) {
+        reduce_sum_kernel<float><<<block_size, thread_size>>>(
+            input.data_ptr<float>(), output.data_ptr<float>(), size,
+            thread_size);
+    } else {
+        throw std::runtime_error("Unsupported data type");
+    }
+}
+
+void reduce_max(const torch::Tensor& input, torch::Tensor& output,
+                int64_t size) {
+    int thread_size = 1024;
+    int block_size = (size + thread_size - 1) / thread_size;
+
+    if (input.dtype() == torch::kFloat32) {
+        reduce_max_kernel<float><<<block_size, thread_size>>>(
+            input.data_ptr<float>(), output.data_ptr<float>(), size,
+            thread_size);
+    } else {
+        throw std::runtime_error("Unsupported data type");
+    }
+}
+
 }  // namespace cudakernels::kernels
