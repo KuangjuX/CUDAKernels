@@ -2,21 +2,20 @@
 #include "warp/mod.hpp"
 
 namespace cudakernels::kernels {
-template <typename Element>
+template <typename Element, const int THREAD_NUMS>
 __global__ void reduce_sum_kernel(const Element* input, Element* output,
-                                  int size, int thread_size) {
+                                  int size) {
     // TODO: WARP_SIZE should be a template parameter
     constexpr int WARP_SIZE = 32;
-    constexpr int THREADS_NUM = thread_size;
     int tid = threadIdx.x;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int lane_id = tid % WARP_SIZE;
     int warp_id = tid / WARP_SIZE;
 
     // always <= 32 warps per block(limited by 1024 threads per block)
-    constexpr int WARP_NUM = (THREADS_NUM + WARP_SIZE - 1) / WARP_SIZE;
+    constexpr int WARP_NUM = (THREAD_NUMS + WARP_SIZE - 1) / WARP_SIZE;
 
-    __shared__ Element shared[WARP_NUM];
+    extern __shared__ Element shared[WARP_NUM];
 
     // 得到当前线程应该处理的数据
     Element sum = (idx < size) ? input[idx] : 0;
@@ -43,17 +42,16 @@ __global__ void reduce_sum_kernel(const Element* input, Element* output,
     if (tid == 0) atomicAdd(output, sum);
 }
 
-template <typename Element>
+template <typename Element, const int THREAD_NUMS>
 __global__ void reduce_max_kernel(const Element* input, Element* output,
-                                  int size, int thread_size) {
+                                  int size) {
     constexpr int WARP_SIZE = 32;
-    constexpr int THREADS_NUM = thread_size;
     int tid = threadIdx.x;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int lane_id = tid % WARP_SIZE;
     int warp_id = tid / WARP_SIZE;
 
-    constexpr int WARP_NUM = (THREADS_NUM + WARP_SIZE - 1) / WARP_SIZE;
+    constexpr int WARP_NUM = (THREAD_NUMS + WARP_SIZE - 1) / WARP_SIZE;
 
     __shared__ Element shared[WARP_NUM];
 
@@ -71,7 +69,7 @@ __global__ void reduce_max_kernel(const Element* input, Element* output,
     __syncthreads();
 
     // WARP_NUM 应该小于 32，因此可以使用一个 warp 来计算所有 warps 的结果
-    max = (lane < WARP_NUM) ? shared[lane] : 0;
+    max = (lane_id < WARP_NUM) ? shared[lane_id] : 0;
 
     // 使用一个 warp 对所有 warps 计算出的结果做 reduce max
     if (warp_id == 0) {
@@ -79,18 +77,18 @@ __global__ void reduce_max_kernel(const Element* input, Element* output,
     }
 
     // 对所有 blocks 进行 reduce max 得到结果
-    if (tid == 0) atomicMax(output, max);
+    // TODO: atomicMax is not supported for float
+    // if (tid == 0) atomicMax(output, max);
 }
 
 void reduce_sum(const torch::Tensor& input, torch::Tensor& output,
                 int64_t size) {
-    int thread_size = 1024;
+    const int thread_size = 1024;
     int block_size = (size + thread_size - 1) / thread_size;
 
     if (input.dtype() == torch::kFloat32) {
-        reduce_sum_kernel<float><<<block_size, thread_size>>>(
-            input.data_ptr<float>(), output.data_ptr<float>(), size,
-            thread_size);
+        reduce_sum_kernel<float, 1024><<<block_size, thread_size>>>(
+            input.data_ptr<float>(), output.data_ptr<float>(), size);
     } else {
         throw std::runtime_error("Unsupported data type");
     }
@@ -98,13 +96,12 @@ void reduce_sum(const torch::Tensor& input, torch::Tensor& output,
 
 void reduce_max(const torch::Tensor& input, torch::Tensor& output,
                 int64_t size) {
-    int thread_size = 1024;
+    const int thread_size = 1024;
     int block_size = (size + thread_size - 1) / thread_size;
 
     if (input.dtype() == torch::kFloat32) {
-        reduce_max_kernel<float><<<block_size, thread_size>>>(
-            input.data_ptr<float>(), output.data_ptr<float>(), size,
-            thread_size);
+        reduce_max_kernel<float, 1024><<<block_size, thread_size>>>(
+            input.data_ptr<float>(), output.data_ptr<float>(), size);
     } else {
         throw std::runtime_error("Unsupported data type");
     }
