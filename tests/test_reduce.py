@@ -14,7 +14,6 @@ class TestReduceSum(unittest.TestCase):
         self.assertEqual(output.item(), input.sum().item())
 
     def test_reduce_sum_v2(self):
-        # input = torch.randn(1024, device='cuda')
         input = torch.tensor([float(i) for i in range(1024)], device='cuda')
         output = torch.zeros(1, device='cuda')
         size = input.size(0)
@@ -22,7 +21,6 @@ class TestReduceSum(unittest.TestCase):
         self.assertEqual(output.item(), input.sum().item())
 
     def test_reduce_sum_v3(self):
-        # input = torch.randn(4096, device='cuda')
         input = torch.tensor([float(i) for i in range(4096)], device='cuda')
         output = torch.zeros(1, device='cuda')
         size = input.size(0)

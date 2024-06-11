@@ -36,7 +36,7 @@ __global__ void reduce_sum_kernel(const Element* input, Element* output,
 
     // 使用一个 warp 对所有 warps 计算出的结果做累加
     if (warp_id == 0) {
-        warp::warp_reduce_sum<Element, WARP_NUM>(sum);
+        sum = warp::warp_reduce_sum<Element, WARP_NUM>(sum);
     }
 
     // 对所有 blocks 进行累加得到 reduce 的结果
@@ -76,7 +76,7 @@ __global__ void reduce_max_kernel(const Element* input, Element* output,
 
     // 使用一个 warp 对所有 warps 计算出的结果做 reduce max
     if (warp_id == 0) {
-        warp::warp_reduce_max<Element, WARP_NUM>(max);
+        max = warp::warp_reduce_max<Element, WARP_NUM>(max);
     }
 
     // 对所有 blocks 进行 reduce max 得到结果
