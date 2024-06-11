@@ -1,6 +1,6 @@
 #include "cuda_utils.hpp"
 
-namespace cudakernels::warp {
+namespace cuda_kernels::warp {
 template <typename Element, const int kWarpSize = 32>
 DEVICE Element warp_reduce_sum(Element value) {
 #pragma unroll
@@ -19,4 +19,4 @@ DEVICE Element warp_reduce_max(Element value) {
     return value;
 }
 
-}  // namespace cudakernels::warp
+}  // namespace cuda_kernels::warp

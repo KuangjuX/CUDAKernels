@@ -1,6 +1,6 @@
 #include "cuda_utils.hpp"
 
-namespace cudakernels {
+namespace cuda_kernels {
 const char* cublasGetErrorString(cublasStatus_t status) {
     switch (status) {
         case CUBLAS_STATUS_SUCCESS:
@@ -27,4 +27,4 @@ const char* cublasGetErrorString(cublasStatus_t status) {
     return "unknown error";
 }
 
-}  // namespace cudakernels
+}  // namespace cuda_kernels

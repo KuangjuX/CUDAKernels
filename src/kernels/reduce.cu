@@ -1,7 +1,7 @@
 #include "kernels/mod.hpp"
 #include "warp/mod.hpp"
 
-namespace cudakernels::kernels {
+namespace cuda_kernels::kernels {
 template <typename Element, const int THREAD_NUMS>
 __global__ void reduce_sum_kernel(const Element* input, Element* output,
                                   int size) {

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace cudakernels {
+namespace cuda_kernels {
 
 template <int a, int b>
 inline constexpr int CeilDiv = (a + b - 1) / b;  // for compile-time values
@@ -28,4 +28,4 @@ inline void __cudaCheck(const cudaError err, const char* file, int line) {
 
 #define CudaCheck(call) __cudaCheck(call, __FILE__, __LINE__)
 
-}  // namespace cudakernels
+}  // namespace cuda_kernels
