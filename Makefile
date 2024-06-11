@@ -1,6 +1,6 @@
 BUILD_DIR := build
 TEST_DIR  := tests
-UNIT_TEST ?= test_reduce
+UNIT_TEST ?= test_softmax
 
 
 .PHONY: build clean test

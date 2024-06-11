@@ -8,6 +8,7 @@ The Project is used to collect the CUDA kernels that I have written by hand, for
 
 - [Reduce Sum](src/kernels/reduce.cu): 使用 Warp Reduce 实现的 reduce sum 操作。
 - [Reduce Max](src/kernels/reduce.cu): 使用 Warp Reduce 实现的 reduce max 操作。
+- [Softmax](src/kernels/softmax.cu): 使用 Warp Reduce 实现的未分块的 softmax 操作。
 
 ## References
 
