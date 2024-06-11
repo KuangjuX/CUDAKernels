@@ -51,6 +51,10 @@ __global__ void softmax_kernel(const Element* x, Element* y, Element* exp_total,
     }
 }
 
+template <typename Element, const int THREAD_NUMS, const int WARP_SIZE>
+__global__ void safe_softmax_kernel(const Element* x, Element* y,
+                                    const int size) {}
+
 void softmax(const torch::Tensor& input, torch::Tensor& output, int64_t size) {
     const int THREAD_SIZE = 1024;
     const int WARP_SIZE = 32;
@@ -58,13 +62,13 @@ void softmax(const torch::Tensor& input, torch::Tensor& output, int64_t size) {
 
     if (input.dtype() == torch::kFloat32) {
         float* exp_total;
-        cudaMalloc(&exp_total, sizeof(float));
-        cudaMemset(exp_total, 0, sizeof(float));
+        CudaCheck(cudaMalloc(&exp_total, sizeof(float)));
+        CudaCheck(cudaMemset(exp_total, 0, sizeof(float)));
         softmax_kernel<float, THREAD_SIZE, WARP_SIZE>
             <<<block_size, THREAD_SIZE>>>(input.data_ptr<float>(),
                                           output.data_ptr<float>(), exp_total,
                                           size);
-        cudaFree(exp_total);
+        CudaCheck(cudaFree(exp_total));
     } else {
         throw std::runtime_error("Unsupported data type");
     }

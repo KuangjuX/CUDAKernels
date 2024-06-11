@@ -1,7 +1,7 @@
 import unittest
 import torch
 import context
-from pybindings import reduce_sum
+from pybindings import reduce_sum, reduce_max
 
 
 class TestReduceSum(unittest.TestCase):
@@ -26,6 +26,30 @@ class TestReduceSum(unittest.TestCase):
         size = input.size(0)
         reduce_sum(input, output, size)
         self.assertEqual(output.item(), input.sum().item())
+
+    def test_reduce_max_v1(self):
+        input = torch.tensor(
+            [1, 2, 3, 4, 5, 6, 7], device='cuda', dtype=torch.int32)
+        output = torch.zeros(1, device='cuda', dtype=torch.int32)
+        size = input.size(0)
+        reduce_max(input, output, size)
+        self.assertEqual(output.item(), input.max().item())
+
+    def test_reduce_max_v2(self):
+        input = torch.randint(
+            0, 100, (1024,), device='cuda', dtype=torch.int32)
+        output = torch.zeros(1, device='cuda', dtype=torch.int32)
+        size = input.size(0)
+        reduce_max(input, output, size)
+        self.assertEqual(output.item(), input.max().item())
+
+    def test_reduce_max_v3(self):
+        input = torch.randint(
+            0, 100, (4096,), device='cuda', dtype=torch.int32)
+        output = torch.zeros(1, device='cuda', dtype=torch.int32)
+        size = input.size(0)
+        reduce_max(input, output, size)
+        self.assertEqual(output.item(), input.max().item())
 
 
 if __name__ == '__main__':
