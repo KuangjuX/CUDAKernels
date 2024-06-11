@@ -21,11 +21,12 @@ __global__ void reduce_sum_kernel(const Element* input, Element* output,
     Element sum = (idx < size) ? input[idx] : 0;
 
     // 使用 warp 做累加求和
-    warp::warp_reduce_sum<Element, WARP_SIZE>(sum);
+    sum = warp::warp_reduce_sum<Element, WARP_SIZE>(sum);
 
     // 取 lane_id 为 0 的结果为该 warp 处理的结果
     if (lane_id == 0) {
         shared[warp_id] = sum;
+        // printf("block: %d, warp: %d, sum: %f\n", blockIdx.x, warp_id, sum);
     }
 
     __syncthreads();
@@ -40,6 +41,8 @@ __global__ void reduce_sum_kernel(const Element* input, Element* output,
 
     // 对所有 blocks 进行累加得到 reduce 的结果
     if (tid == 0) atomicAdd(output, sum);
+
+    // if (tid == 0) printf("sum: %f\n", output[0]);
 }
 
 template <typename Element, const int THREAD_NUMS>
@@ -59,7 +62,7 @@ __global__ void reduce_max_kernel(const Element* input, Element* output,
     Element max = (idx < size) ? input[idx] : 0;
 
     // 使用 warp 做 reduce 求最大值
-    warp::warp_reduce_sum<Element, WARP_SIZE>(max);
+    max = warp::warp_reduce_sum<Element, WARP_SIZE>(max);
 
     // 取 lane_id 为 0 的结果为该 warp 处理的结果
     if (lane_id == 0) {
@@ -83,11 +86,11 @@ __global__ void reduce_max_kernel(const Element* input, Element* output,
 
 void reduce_sum(const torch::Tensor& input, torch::Tensor& output,
                 int64_t size) {
-    const int thread_size = 1024;
-    int block_size = (size + thread_size - 1) / thread_size;
+    const int THREAD_SIZE = 1024;
+    int block_size = (size + THREAD_SIZE - 1) / THREAD_SIZE;
 
     if (input.dtype() == torch::kFloat32) {
-        reduce_sum_kernel<float, 1024><<<block_size, thread_size>>>(
+        reduce_sum_kernel<float, 1024><<<block_size, THREAD_SIZE>>>(
             input.data_ptr<float>(), output.data_ptr<float>(), size);
     } else {
         throw std::runtime_error("Unsupported data type");
@@ -96,12 +99,14 @@ void reduce_sum(const torch::Tensor& input, torch::Tensor& output,
 
 void reduce_max(const torch::Tensor& input, torch::Tensor& output,
                 int64_t size) {
-    const int thread_size = 1024;
-    int block_size = (size + thread_size - 1) / thread_size;
+    const int THREAD_SIZE = 1024;
+    int block_size = (size + THREAD_SIZE - 1) / THREAD_SIZE;
 
     if (input.dtype() == torch::kFloat32) {
-        reduce_max_kernel<float, 1024><<<block_size, thread_size>>>(
+        reduce_max_kernel<float, 1024><<<block_size, THREAD_SIZE>>>(
             input.data_ptr<float>(), output.data_ptr<float>(), size);
+
+        cudaDeviceSynchronize();
     } else {
         throw std::runtime_error("Unsupported data type");
     }
