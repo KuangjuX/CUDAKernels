@@ -12,7 +12,8 @@ The Project is used to collect the CUDA kernels that I have written by hand, for
 
 ## Notes
 
-- [Vectorized Memory Access](notes/vec.md): 向量化内存访问笔记 / Notes about Vectorized Memory Access.
+- [Vectorized Memory Access](notes/memory/vec.md): 向量化内存访问笔记 / Notes about Vectorized Memory Access.
+- [Memory Coalescing](notes/memory/coalescing.md): 内存合并访问笔记 / Notes about Memory Coalescing.
 - [Warp-Level Primitives](notes/warp.md): Warp 原语笔记 / Notes about Warp-Level Primitives.
 - [FlashAttention](notes/flash_attn.md): FlashAttention 笔记 / Notes about FlashAttention.
 
