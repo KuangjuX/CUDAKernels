@@ -23,6 +23,10 @@ The Project is used to collect the CUDA kernels that I have written by hand, for
 - [Warp-Level Primitives](notes/warp.md): Warp 原语笔记 / Notes about Warp-Level Primitives.
 - [FlashAttention](notes/flash_attn.md): FlashAttention 笔记 / Notes about FlashAttention.
 
+### Thunder Kittens
+
+- [Vectorized Memory Access in TK](notes/memory/ThunderKittens.md): TK 中向量化内存访问实现笔记 / Notes about Vectorized Memory Access in Tk.
+
 ## References
 
 - [CUDA-Learn-Notes: 🎉CUDA 笔记 / 大模型手撕CUDA / C++笔记，更新随缘: flash_attn、sgemm、sgemv、warp reduce、block reduce、dot product、elementwise、softmax、layernorm、rmsnorm、hist etc.](https://github.com/DefTruth/CUDA-Learn-Notes)
