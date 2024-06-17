@@ -16,8 +16,15 @@ struct Register {
     // The actual register vector data.
     dtype data[outer_dim];
 
-    DEVICE dtype* operator[](size_t idx) { return &data[idx]; }
-    DEVICE const dtype* operator[](size_t idx) const { return &data[idx]; }
+    DEVICE dtype& operator[](size_t idx) { return data[idx]; }
+    DEVICE const dtype& operator[](size_t idx) const { return data[idx]; }
+    DEVICE void print(int tid) {
+        printf("tid: %d\n", tid);
+        for (int i = 0; i < outer_dim; i++) {
+            printf("%.2f %.2f ", data[i].x, data[i].y);
+        }
+        printf("\n");
+    }
     // DEVICE dtype& operator[](int2 outin) { return data[outin.x][outin.y]; }
     // DEVICE const dtype& operator[](int2 outin) const {
     //     return data[outin.x][outin.y];

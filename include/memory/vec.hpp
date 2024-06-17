@@ -7,9 +7,10 @@
 namespace cuda_kernels::memory {
 
 template <typename Element>
-DEVICE void vec_load_g2s(Element* src, Element* dst, int length) {
+__device__ inline static void vec_load_g2s(Element* src, Element* dst,
+                                           int length) {
     constexpr int element_per_transfer = sizeof(float4) / sizeof(Element);
-    constexpr int total_calls = lengrh / element_per_transfer;
+    constexpr int total_calls = length / element_per_transfer;
     int tid = threadIdx.x;
 
     int lane_id = tid % WARP_SIZE;
@@ -27,9 +28,10 @@ DEVICE void vec_load_g2s(Element* src, Element* dst, int length) {
 }
 
 template <typename Element>
-DEVICE void vec_store_s2g(Element* src, Element* dst, int length) {
+__device__ inline static void vec_store_s2g(Element* src, Element* dst,
+                                            int length) {
     constexpr int element_per_transfer = sizeof(float4) / sizeof(Element);
-    constexpr int total_calls = lengrh / element_per_transfer;
+    constexpr int total_calls = length / element_per_transfer;
 
     int tid = threadIdx.x;
 
@@ -56,14 +58,15 @@ DEVICE void vec_store_s2g(Element* src, Element* dst, int length) {
  * @param[in] src The source array in global memory.
  */
 template <const int OUTER_LENGTH>
-DEVICE void vec_load_g2r_f32(float* src,
-                             types::Register<float2, OUTER_LENGTH>) {
+__device__ inline static void vec_load_g2r_f32(
+    const float* src, types::Register<float2, OUTER_LENGTH>& dst) {
+    // 使用 warp 进行协作式加载
     int lane_id = threadIdx.x % WARP_SIZE;
-
     __syncwarp();
 
 #pragma unroll
     for (auto w = 0; w < (dst.outer_dim + 1) / 2; ++w) {
+        // 最多可以处理到 32 * outer_dim / 2 个数据
         int idx = w * 32 + (lane_id % 4) * 8 + lane_id / 4;
         int o_dim = w * 2 + (lane_id % 4) / 2;
         // This should be a maximally coalesced load.
@@ -81,7 +84,7 @@ DEVICE void vec_load_g2r_f32(float* src,
     // everything they need.
 #pragma unroll
     for (auto w = 0; w < dst.outer_dim; w++) {
-        int leader = (land_id / 4) * 4 + 2 * (w % 2);
+        int leader = (lane_id / 4) * 4 + 2 * (w % 2);
         dst[w].x = __shfl_sync(0xffffffff, dst[w].x, leader);
         dst[w].y = __shfl_sync(0xffffffff, dst[w].y, leader + 1);
     }
@@ -97,10 +100,10 @@ DEVICE void vec_load_g2r_f32(float* src,
  * @param[out] dst The destination array in global memory.
  */
 template <const int OUTER_LENGTH>
-DEVICE void vec_store_r2g_f32(types::Register<float2, OUTER_LENGTH> src,
-                              float* dst) {
+__device__ inline static void vec_store_r2g_f32(
+    types::Register<float2, OUTER_LENGTH>& src, float* dst) {
+    // 使用 warp 进行协作式存储
     int lane_id = threadIdx.x % WARP_SIZE;
-
     __syncwarp();
 
 #pragma unroll
