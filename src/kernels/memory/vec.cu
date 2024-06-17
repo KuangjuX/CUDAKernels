@@ -13,23 +13,23 @@ __global__ void vec_copy_g2r_kernel_f32(const float* src, float* dst,
 
     memory::vec_load_g2r_f32<OUTER_LENGTH>(src + offset, regs);
 
-    // if (tid == 0) {
-    //     regs.print(tid);
-    // } else if (tid == 4) {
-    //     regs.print(tid);
-    // } else if (tid == 32) {
-    //     regs.print(tid);
-    // } else if (tid == 64) {
-    //     regs.print(tid);
-    // } else if (tid == 96) {
-    //     regs.print(tid);
-    // }
-
-    // __syncthreads();
-
-    if (tid == 0) {
+    if (tid == 0)
         regs.print(tid);
-    }
+    else if (tid == 4)
+        regs.print(tid);
+    else if (tid == 8)
+        regs.print(tid);
+    else if (tid == 12)
+        regs.print(tid);
+    else if (tid == 16)
+        regs.print(tid);
+    else if (tid == 20)
+        regs.print(tid);
+    else if (tid == 24)
+        regs.print(tid);
+    else if (tid == 28)
+        regs.print(tid);
+
     __syncthreads();
     if (tid == 32) {
         regs.print(tid);

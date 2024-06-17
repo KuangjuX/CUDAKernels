@@ -66,7 +66,6 @@ __device__ inline static void vec_load_g2r_f32(
 
 #pragma unroll
     for (auto w = 0; w < (dst.outer_dim + 1) / 2; ++w) {
-        // 最多可以处理到 32 * outer_dim / 2 个数据
         int idx = w * 32 + (lane_id % 4) * 8 + lane_id / 4;
         int o_dim = w * 2 + (lane_id % 4) / 2;
         // This should be a maximally coalesced load.
@@ -82,6 +81,9 @@ __device__ inline static void vec_load_g2r_f32(
 
     // Now we need to do a bunch of shuffle_sync's to make sure everyone has
     // everything they need.
+
+    // 相邻的四个线程进行数据的同步，最后一个 warp
+    // 中相邻四个线程里的数据是一样的。
 #pragma unroll
     for (auto w = 0; w < dst.outer_dim; w++) {
         int leader = (lane_id / 4) * 4 + 2 * (w % 2);
