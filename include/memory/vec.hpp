@@ -64,8 +64,15 @@ __device__ inline static void vec_load_g2r_f32(
     int lane_id = threadIdx.x % WARP_SIZE;
     __syncwarp();
 
+    // 内存合并访问
 #pragma unroll
     for (auto w = 0; w < (dst.outer_dim + 1) / 2; ++w) {
+        // 四个线程一组，组内线程会间隔 8 个访问内存
+        // 不同组之间进行交错访问，用来进行合并内存访问
+        // w = 0, land_id = 0, 1, 2, 3, idx = 0, 8, 16, 24
+        // w = 1, land_id = 0, 1, 2, 3, idx = 32, 40, 48, 56
+        // w = 0, land_id = 4, 5, 6, 7, idx = 1, 9, 17, 25
+        // w = 1, land_id = 4, 5, 6, 7, idx = 33, 41, 49, 57
         int idx = w * 32 + (lane_id % 4) * 8 + lane_id / 4;
         int o_dim = w * 2 + (lane_id % 4) / 2;
         // This should be a maximally coalesced load.
@@ -81,9 +88,8 @@ __device__ inline static void vec_load_g2r_f32(
 
     // Now we need to do a bunch of shuffle_sync's to make sure everyone has
     // everything they need.
-
-    // 相邻的四个线程进行数据的同步，最后一个 warp
-    // 中相邻四个线程里的数据是一样的。
+    // 相邻的四个线程进行数据的同步，warp 中相邻四个线程里的数据是一样的。
+    // 不同 warp 间不是互相共享的，需要手动计算偏移量。
 #pragma unroll
     for (auto w = 0; w < dst.outer_dim; w++) {
         int leader = (lane_id / 4) * 4 + 2 * (w % 2);
@@ -108,6 +114,7 @@ __device__ inline static void vec_store_r2g_f32(
     int lane_id = threadIdx.x % WARP_SIZE;
     __syncwarp();
 
+    // 直接根据 warp 中的线程存回去，不需要进行 warp 协作。
 #pragma unroll
     for (auto w = 0; w < (src.outer_dim + 1) / 2; ++w) {
         int idx = w * 32 + (lane_id % 4) * 8 + lane_id / 4;
