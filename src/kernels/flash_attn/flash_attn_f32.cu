@@ -53,6 +53,13 @@ __global__ void flash_attn_fwd_f32_kernel(
             Vj[(tid * d) + x] = V[qkv_offset + (tile_size * j) + (tid * d) + x];
         }
 
+        // for (int x = 0; x < d; ++x) {
+        //     // 打印 Kj, Vj
+        //     printf("Kj[%d]: %f, Vj[%d]: %f\n", (tid * d) + x, Kj[(tid * d) +
+        //     x],
+        //            (tid * d) + x, Vj[(tid * d) + x]);
+        // }
+
         // 同步所有线程，内层循环可以正确使用 Kj, Vj
         __syncthreads();
 
@@ -60,9 +67,15 @@ __global__ void flash_attn_fwd_f32_kernel(
         for (int i = 0; i < Tr; ++i) {
             // 加载 Qi 到 SRAM，l，m 到寄存器
             for (int x = 0; x < d; ++x) {
+                // 每个线程处理一行(一个 d)
                 Qi[(tid * d) + i] =
                     Q[qkv_offset + (tile_size * i) + (tid * d) + i];
             }
+
+            // for (int x = 0; x < d; ++x) {
+            //     // 打印 Qi
+            //     printf("Qi[%d]: %f\n", (tid * d) + i, Qi[(tid * d) + i]);
+            // }
             // 一次循环加载一次 l，m
             float row_m_prev = m[lm_offset + (Br * i) + tid];
             float row_l_prev = l[lm_offset + (Br * i) + tid];
@@ -73,6 +86,7 @@ __global__ void flash_attn_fwd_f32_kernel(
             for (int y = 0; y < Bc; ++y) {
                 float sum = 0;
                 // S = Qk^T
+                // 一个线程处理一个 d，每次都和 K 进行计算
                 for (int x = 0; x < d; ++x) {
                     sum += Qi[(tid * d) + x] * Kj[(y * d) + x];
                 }
@@ -89,11 +103,18 @@ __global__ void flash_attn_fwd_f32_kernel(
                 row_l += S[(Bc * tid) + y];
             }
 
+            // 打印 S
+            // for (int y = 0; y < Bc; ++y) {
+            //     printf("S[%d]: %f\n", (Bc * tid) + y, S[(Bc * tid) + y]);
+            // }
+
             // 计算新的 m 和 l
             float row_m_new = max(row_m, row_m_prev);
             // online softmax 的计算
             float row_l_new = (__expf(row_m_prev - row_m_new) * row_l_prev) +
                               (__expf(row_m - row_m_new) * row_l);
+
+            // printf("row_m_new: %f, row_l_new: %f\n", row_m_new, row_l_new);
 
             // 将 O,l,m 写回到 HBM
             for (int x = 0; x < d; ++x) {
@@ -108,6 +129,12 @@ __global__ void flash_attn_fwd_f32_kernel(
                         O[qkv_offset + (tile_size * i) + (tid * d) + x] +
                     (__expf(row_m - row_m_new) * pv);
             }
+
+            // 打印 O
+            // for (int x = 0; x < d; ++x) {
+            //      printf("O[%d]: %f\n", (tid * d) + x,
+            //           O[qkv_offset + (tile_size * i) + (tid * d) + x]);
+            // }
 
             m[lm_offset + (Br * i) + tid] = row_m_new;
             l[lm_offset + (Br * i) + tid] = row_l_new;
