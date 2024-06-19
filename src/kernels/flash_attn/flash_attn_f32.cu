@@ -200,5 +200,7 @@ void flash_attn_fwd(const torch::Tensor& Q, const torch::Tensor& K,
     } else {
         throw std::runtime_error("Unsupported data type");
     }
+
+    cudaDeviceSynchronize();
 }
 }  // namespace cuda_kernels::kernels
