@@ -4,6 +4,14 @@ import context
 from pybindings import flash_attn_fwd
 
 
+def self_attention(q, k, v):
+    score = q @ k.T / (q.shape[-1] ** 0.5)
+    attention = torch.nn.functional.softmax(score)
+    out = attention @ v
+
+    return out
+
+
 def flash_attn_v1(q, k, v, device='cuda', BLOCK_M=4):
     '''
     The tiny flash attention implement
@@ -87,9 +95,9 @@ class TestFlashAttnFwdF32(unittest.TestCase):
         k = torch.randn(1, 1, 16, 64, device='cuda', dtype=torch.float32)
         v = torch.randn(1, 1, 16, 64, device='cuda', dtype=torch.float32)
         o = torch.zeros(1, 1, 16, 64, device='cuda', dtype=torch.float32)
+        print(o[0][0])
         flash_attn_fwd(q, k, v, o)
-        ref_o = flash_attn_v1(q[0][0], k[0][0], v[0][0])
-
+        ref_o = self_attention(q[0][0], k[0][0], v[0][0])
         print(o[0][0])
         print(ref_o)
 

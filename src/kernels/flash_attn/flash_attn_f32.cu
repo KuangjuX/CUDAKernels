@@ -60,6 +60,12 @@ __global__ void flash_attn_fwd_f32_kernel(
         //            (tid * d) + x, Vj[(tid * d) + x]);
         // }
 
+        // for (int x = 0; x < d; ++x) {
+        //     printf("tid %d load Kj[%d]: %f, Vj[%d]: %f\n", tid, (tid * d) +
+        //     x,
+        //            Kj[(tid * d) + x], (tid * d) + x, Vj[(tid * d) + x]);
+        // }
+
         // 同步所有线程，内层循环可以正确使用 Kj, Vj
         __syncthreads();
 
@@ -132,8 +138,8 @@ __global__ void flash_attn_fwd_f32_kernel(
 
             // 打印 O
             // for (int x = 0; x < d; ++x) {
-            //      printf("O[%d]: %f\n", (tid * d) + x,
-            //           O[qkv_offset + (tile_size * i) + (tid * d) + x]);
+            //     printf("O[%d]: %f\n", (tid * d) + x,
+            //            O[qkv_offset + (tile_size * i) + (tid * d) + x]);
             // }
 
             m[lm_offset + (Br * i) + tid] = row_m_new;
@@ -156,11 +162,12 @@ void flash_attn_fwd(const torch::Tensor& Q, const torch::Tensor& K,
     const int N = Q.size(2);
     const int d = Q.size(3);
 
-    printf("B: %d, nh: %d, N: %d, d: %d\n", B, nh, N, d);
+    // printf("B: %d, nh: %d, N: %d, d: %d\n", B, nh, N, d);
 
     const int Tc = ceil((float)N / Bc);
     const int Tr = ceil((float)N / Br);
     const float softmax_scale = 1.0 / sqrt(d);
+    // const float softmax_scale = 1.0;
 
     auto type = Q.dtype();
 
@@ -179,8 +186,8 @@ void flash_attn_fwd(const torch::Tensor& Q, const torch::Tensor& K,
     int max_sram_size;
     cudaDeviceGetAttribute(&max_sram_size, cudaDevAttrMaxSharedMemoryPerBlock,
                            0);
-    printf("Max shared memory per block: %d, requested shared memory: %d\n",
-           max_sram_size, sram_size);
+    // printf("Max shared memory per block: %d, requested shared memory: %d\n",
+    //        max_sram_size, sram_size);
 
     dim3 grid_dim(B, nh);
     dim3 block_dim(Bc);
