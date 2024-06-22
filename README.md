@@ -25,7 +25,8 @@ The Project is used to collect the CUDA kernels that I have written by hand, for
 
 ### Thunder Kittens
 
-- [Vectorized Memory Access in TK](notes/memory/ThunderKittens.md): TK 中向量化内存访问实现笔记 / Notes about Vectorized Memory Access in Tk.
+- [Vectorized Memory Access in TK](notes/TK/memory/vec.md): TK 中向量化内存访问实现笔记 / Notes about Vectorized Memory Access in Tk.
+- [2D Tile Memory Access in TK](notes/TK/memory/tile.md): TK 中 2D Tile 内存访问实现笔记 / Notes about 2D Tile Memory Access in Tk.
 
 ## References
 

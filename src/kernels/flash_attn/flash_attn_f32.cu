@@ -78,10 +78,6 @@ __global__ void flash_attn_fwd_f32_kernel(
                     Q[qkv_offset + (tile_size * i) + (tid * d) + i];
             }
 
-            // for (int x = 0; x < d; ++x) {
-            //     // 打印 Qi
-            //     printf("Qi[%d]: %f\n", (tid * d) + i, Qi[(tid * d) + i]);
-            // }
             // 一次循环加载一次 l，m
             float row_m_prev = m[lm_offset + (Br * i) + tid];
             float row_l_prev = l[lm_offset + (Br * i) + tid];
@@ -108,11 +104,6 @@ __global__ void flash_attn_fwd_f32_kernel(
                 S[(Bc * tid) + y] = __expf(S[(Bc * tid) + y] - row_m);
                 row_l += S[(Bc * tid) + y];
             }
-
-            // 打印 S
-            // for (int y = 0; y < Bc; ++y) {
-            //     printf("S[%d]: %f\n", (Bc * tid) + y, S[(Bc * tid) + y]);
-            // }
 
             // 计算新的 m 和 l
             float row_m_new = max(row_m, row_m_prev);
