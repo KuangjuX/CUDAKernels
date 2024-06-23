@@ -1,7 +1,7 @@
 BUILD_DIR  := build
 TEST_DIR   := tests
 BENCH_DIR  := benchs
-UNIT_TEST  ?= test_flash_attn_f32
+UNIT_TEST  ?= test_2d_tile_copy
 BENCHMARK  ?= bench_flash_attn_f32
 
 

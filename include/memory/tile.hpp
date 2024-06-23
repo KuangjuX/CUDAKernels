@@ -15,7 +15,7 @@ namespace cuda_kernels::memory {
  * @param row_stride[in] row stride of source data
  */
 template <typename T, typename T2, size_t height, size_t width>
-__global__ void copy_2d_tile_g2r(const T* src,
+DEVICE void copy_2d_tile_g2r(const T* src,
                                  types::RegTile<T2, height, width>& dst,
                                  const int row_stride) {
     int lane_id = threadIdx.x % WARP_SIZE;
