@@ -7,12 +7,16 @@ template <typename T, typename T2>
 __global__ void copy_2d_tile_g2r_kernel(const T* src, T* dst) {
     int tid = threadIdx.x;
 
+    __shared__ T smem[16 * 16];
+
     const int row_stride = 16;
     memory::types::RegTile<T2, 1, 1> reg0;
     memory::types::RegTile<T2, 1, 1> reg1;
 
     memory::copy_2d_tile_g2r(src, reg0, row_stride);
-    warp::ldmatrix<T, T2>(src, reg1);
+    warp::ldmatrix<T, T2>(smem, reg1);
+
+    __syncthreads();
 
     // Debug
     if (tid == 0) {
@@ -27,6 +31,10 @@ __global__ void copy_2d_tile_g2r_kernel(const T* src, T* dst) {
                    __half2float(reg1.tiles[0][0].data[i].x),
                    __half2float(reg1.tiles[0][0].data[i].y));
         }
+    }
+
+    if (tid == 0) {
+        printf("test.\n");
     }
 }
 

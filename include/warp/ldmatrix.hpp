@@ -20,7 +20,8 @@ template <typename T, typename T2, const size_t height = 1,
 DEVICE void ldmatrix(const T* shared_memory,
                      memory::types::RegTile<T2, height, width>& reg) {
     int tid = threadIdx.x;
-    auto smem = shared_memory + tid % 16 * 8 + tid / 16 * 8;
+    int lane_id = tid % 32;
+    auto smem = shared_memory + lane_id % 16 * 8 + lane_id / 16 * 8;
     // 四个 8 * 8 的矩阵加载一个 16 * 16 的矩阵
     asm volatile(
         "ldmatrix.sync.aligned.m8n8.x4.shared.b16 {%0, %1, %2, %3}, [%4];"
