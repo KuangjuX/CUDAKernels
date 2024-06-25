@@ -9,22 +9,30 @@ __global__ void copy_2d_tile_g2r_kernel(const T* src, T* dst) {
 
     __shared__ T smem[16 * 16];
 
+    if (tid == 0) {
+        for (int i = 0; i < 16; ++i) {
+            for (int j = 0; j < 16; ++j) {
+                smem[i * 16 + j] = src[i * 16 + j];
+            }
+        }
+    }
+
     const int row_stride = 16;
     memory::types::RegTile<T2, 1, 1> reg0;
     memory::types::RegTile<T2, 1, 1> reg1;
 
     memory::copy_2d_tile_g2r(src, reg0, row_stride);
-    warp::ldmatrix<T, T2>(smem, reg1);
+    warp::ldmatrix<T, T2>(smem, reg1, row_stride);
 
     __syncthreads();
 
     // Debug
     if (tid == 0) {
-        // for (int i = 0; i < 4; ++i) {
-        //     printf("reg0.data[%d] x = %f, y = %f\n", i,
-        //            __half2float(reg0.tiles[0][0].data[i].x),
-        //            __half2float(reg0.tiles[0][0].data[i].y));
-        // }
+        for (int i = 0; i < 4; ++i) {
+            printf("reg0.data[%d] x = %f, y = %f\n", i,
+                   __half2float(reg0.tiles[0][0].data[i].x),
+                   __half2float(reg0.tiles[0][0].data[i].y));
+        }
 
         for (int i = 0; i < 4; ++i) {
             printf("reg1.data[%d] x = %f, y = %f\n", i,
